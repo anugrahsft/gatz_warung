@@ -1,0 +1,5 @@
+/.vscode
+/data_knowledge.csv
+/knowledge_embed.py
+/venv
+/__pycache__
