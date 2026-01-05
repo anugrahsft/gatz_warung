@@ -4,19 +4,6 @@ from database_helper import get_connection
 
 # 1. SETTING HALAMAN & HAPUS WATERMARK (CSS)
 st.set_page_config(page_title="Gatz Warung Digital", layout="wide")
-st.markdown(
-    """
-    <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    /* Menghilangkan padding berlebih di mobile */
-    .block-container {padding-top: 1rem; padding-bottom: 0rem;}
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
 
 # --- FUNGSI DATABASE ---
 def simpan_barang(nama, modal, jual, stok):
