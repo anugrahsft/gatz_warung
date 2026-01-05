@@ -79,11 +79,13 @@ with tab1:
             c1, c2 = st.columns(2)
             stok_sekarang = int(data_p["stok_sekarang"])
 
-            # --- BAGIAN YANG TADI ERROR INDENTASI ---
+            # CEK APAKAH STOK TERSEDIA
             if stok_sekarang > 0:
+                # Hanya tampilkan input jika stok minimal 1
                 qty = c1.number_input(
                     "Jumlah", min_value=1, max_value=stok_sekarang, step=1
                 )
+
                 if c2.button("➕ Tambah ke Pesanan", use_container_width=True):
                     item = {
                         "id": pilihan_id,
@@ -95,7 +97,8 @@ with tab1:
                     st.session_state.keranjang.append(item)
                     st.toast(f"{data_p['nama_barang']} masuk keranjang!")
             else:
-                st.error("❌ Stok Habis! Update stok dulu di Tab 2.")
+                # Tampilan kalau stok kosong (biar nggak crash)
+                st.error("❌ Stok Habis! Update stok di Tab 2.")
                 c2.button("➕ Tambah", disabled=True, use_container_width=True)
 
         with col_k2:
@@ -135,7 +138,7 @@ with tab1:
                 st.write("Keranjang masih kosong.")
     else:
         st.warning("Stok kosong!")
-        
+
 # --- TAB 2: STOK BARANG ---
 with tab2:
     st.subheader("Manajemen Stok")
