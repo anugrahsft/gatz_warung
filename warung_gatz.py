@@ -77,19 +77,26 @@ with tab1:
             )
 
             c1, c2 = st.columns(2)
-            qty = c1.number_input(
-                "Jumlah", min_value=1, max_value=int(data_p["stok_sekarang"]), step=1
-            )
-            if c2.button("➕ Tambah ke Pesanan", use_container_width=True):
-                item = {
-                    "id": pilihan_id,
-                    "nama": data_p["nama_barang"],
-                    "harga": int(data_p["harga_jual"]),
-                    "qty": qty,
-                    "subtotal": int(data_p["harga_jual"]) * qty,
-                }
-                st.session_state.keranjang.append(item)
-                st.toast(f"{data_p['nama_barang']} masuk keranjang!")
+            stok_sekarang = int(data_p["stok_sekarang"])
+
+            # --- BAGIAN YANG TADI ERROR INDENTASI ---
+            if stok_sekarang > 0:
+                qty = c1.number_input(
+                    "Jumlah", min_value=1, max_value=stok_sekarang, step=1
+                )
+                if c2.button("➕ Tambah ke Pesanan", use_container_width=True):
+                    item = {
+                        "id": pilihan_id,
+                        "nama": data_p["nama_barang"],
+                        "harga": int(data_p["harga_jual"]),
+                        "qty": qty,
+                        "subtotal": int(data_p["harga_jual"]) * qty,
+                    }
+                    st.session_state.keranjang.append(item)
+                    st.toast(f"{data_p['nama_barang']} masuk keranjang!")
+            else:
+                st.error("❌ Stok Habis! Update stok dulu di Tab 2.")
+                c2.button("➕ Tambah", disabled=True, use_container_width=True)
 
         with col_k2:
             st.write("### 📝 Daftar Pesanan")
@@ -128,7 +135,7 @@ with tab1:
                 st.write("Keranjang masih kosong.")
     else:
         st.warning("Stok kosong!")
-
+        
 # --- TAB 2: STOK BARANG ---
 with tab2:
     st.subheader("Manajemen Stok")
@@ -181,8 +188,8 @@ with tab2:
                     st.warning(f"ID {id_del} dihapus.")
                     st.rerun()
 
-# --- TAB 3: LAPORAN (FIX WITA) ---
-# --- TAB 3: LAPORAN (FIX WITA) ---
+
+# --- TAB 3: LAPORAN Keuangan
 with tab3:
     st.subheader("📊 Laporan Keuangan")
     from database_helper import ambil_laporan, hapus_satu_laporan, reset_laporan
