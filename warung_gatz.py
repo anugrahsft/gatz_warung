@@ -182,15 +182,31 @@ with tab2:
                     st.rerun()
 
 # --- TAB 3: LAPORAN (FIX WITA) ---
+# --- TAB 3: LAPORAN (FIX WITA) ---
 with tab3:
     st.subheader("📊 Laporan Keuangan")
-    from database_helper import ambil_laporan, hapus_satu_laporan, reset_laporan
+    from database_helper import ambil_laporan
 
     df_lap = ambil_laporan()
 
     if not df_lap.empty:
-        # Konversi waktu ke WITA (UTC+8) agar tidak delay sejam
-        df_lap["tanggal"] = pd.to_datetime(df_lap["tanggal"]) + timedelta(hours=8)
+        # PAKSA KONVERSI DI SINI:
+        # 1. Pastikan kolom tanggal jadi format waktu Python
+        df_lap["tanggal"] = pd.to_datetime(df_lap["tanggal"])
+
+        # 2. Tambahkan 8 jam (Makassar / WITA)
+        df_lap["tanggal"] = df_lap["tanggal"] + pd.Timedelta(hours=8)
+
+        # 3. Tampilkan di dataframe
+        st.dataframe(
+            df_lap,
+            column_config={
+                "tanggal": st.column_config.DatetimeColumn(
+                    "Waktu (WITA)", format="DD/MM/YY HH:mm"
+                ),
+            },
+            hide_index=True,
+        )
 
         total_omzet = df_lap["total_harga"].sum()
         total_untung = df_lap["untung"].sum()
