@@ -81,7 +81,6 @@ with tab1:
 
             # CEK APAKAH STOK TERSEDIA
             if stok_sekarang > 0:
-                # Hanya tampilkan input jika stok minimal 1
                 qty = c1.number_input(
                     "Jumlah", min_value=1, max_value=stok_sekarang, step=1
                 )
@@ -97,7 +96,6 @@ with tab1:
                     st.session_state.keranjang.append(item)
                     st.toast(f"{data_p['nama_barang']} masuk keranjang!")
             else:
-                # Tampilan kalau stok kosong (biar nggak crash)
                 st.error("❌ Stok Habis! Update stok di Tab 2.")
                 c2.button("➕ Tambah", disabled=True, use_container_width=True)
 
