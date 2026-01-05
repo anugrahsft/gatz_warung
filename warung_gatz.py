@@ -185,7 +185,7 @@ with tab2:
 # --- TAB 3: LAPORAN (FIX WITA) ---
 with tab3:
     st.subheader("📊 Laporan Keuangan")
-    from database_helper import ambil_laporan
+    from database_helper import ambil_laporan, hapus_satu_laporan, reset_laporan
 
     df_lap = ambil_laporan()
 
