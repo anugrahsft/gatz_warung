@@ -1,9 +1,25 @@
 import streamlit as st
 import pandas as pd
 from database_helper import get_connection
+from datetime import datetime, timedelta  # TAMBAHKAN INI UNTUK WITA
 
-# 1. SETTING HALAMAN & HAPUS WATERMARK (CSS)
+# 1. SETTING HALAMAN & CSS ANTI-WATERMARK (LEBIH KUAT)
 st.set_page_config(page_title="Gatz Warung Digital", layout="wide")
+st.markdown(
+    """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden !important;} 
+    header {visibility: hidden;}
+    /* Menghilangkan tombol deploy di pojok kanan */
+    .stAppDeployButton {display:none !important;}
+    /* Mengurangi gap atas di mobile */
+    .block-container {padding-top: 2rem;}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 
 # --- FUNGSI DATABASE ---
 def simpan_barang(nama, modal, jual, stok):
@@ -165,7 +181,7 @@ with tab2:
                     st.warning(f"ID {id_del} dihapus.")
                     st.rerun()
 
-# --- TAB 3: LAPORAN (SUDAH FIX KEYERROR) ---
+# --- TAB 3: LAPORAN (FIX WITA) ---
 with tab3:
     st.subheader("📊 Laporan Keuangan")
     from database_helper import ambil_laporan, hapus_satu_laporan, reset_laporan
@@ -173,6 +189,9 @@ with tab3:
     df_lap = ambil_laporan()
 
     if not df_lap.empty:
+        # Konversi waktu ke WITA (UTC+8) agar tidak delay sejam
+        df_lap["tanggal"] = pd.to_datetime(df_lap["tanggal"]) + timedelta(hours=8)
+
         total_omzet = df_lap["total_harga"].sum()
         total_untung = df_lap["untung"].sum()
         c1, c2 = st.columns(2)
@@ -198,7 +217,7 @@ with tab3:
             column_config={
                 "No": st.column_config.NumberColumn("No", width="small"),
                 "tanggal": st.column_config.DatetimeColumn(
-                    "Waktu", format="DD/MM/YY HH:mm"
+                    "Waktu (WITA)", format="DD/MM/YY HH:mm"
                 ),
                 "total_harga": st.column_config.NumberColumn(
                     "Total Jual", format="Rp %d"
@@ -217,8 +236,7 @@ with tab3:
             map_id = {}
             for i, row in df_lap.iterrows():
                 nomor_tabel = i + 1
-                # DISINI FIX-NYA: Kita pake row['tanggal'] bukan row['Waktu']
-                label = f"{nomor_tabel}. {row['nama_barang']} ({row['tanggal']})"
+                label = f"{nomor_tabel}. {row['nama_barang']} ({row['tanggal'].strftime('%H:%M')})"
                 pilihan_label.append(label)
                 map_id[label] = row["id"]
 
