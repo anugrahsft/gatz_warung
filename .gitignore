@@ -1,4 +1,5 @@
 /.vscode
+.streamlit/
 /data_knowledge.csv
 /knowledge_embed.py
 /venv

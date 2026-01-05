@@ -3,6 +3,16 @@ import pandas as pd
 from database_helper import get_connection
 
 st.set_page_config(page_title="Gatz Warung Digital", layout="wide")
+st.markdown(
+    """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 # --- FUNGSI DATABASE ---
 def simpan_barang(nama, modal, jual, stok):
