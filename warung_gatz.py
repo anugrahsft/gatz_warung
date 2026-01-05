@@ -1,9 +1,9 @@
 import streamlit as st
 import pandas as pd
 from database_helper import get_connection
-from datetime import datetime, timedelta  # TAMBAHKAN INI UNTUK WITA
+from datetime import datetime, timedelta
 
-# 1. SETTING HALAMAN & CSS ANTI-WATERMARK (LEBIH KUAT)
+# 1. SETTING HALAMAN & CSS ANTI-WATERMARK
 st.set_page_config(page_title="Gatz Warung Digital", layout="wide")
 st.markdown(
     """
@@ -11,9 +11,7 @@ st.markdown(
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden !important;} 
     header {visibility: hidden;}
-    /* Menghilangkan tombol deploy di pojok kanan */
     .stAppDeployButton {display:none !important;}
-    /* Mengurangi gap atas di mobile */
     .block-container {padding-top: 2rem;}
     </style>
     """,
@@ -52,7 +50,7 @@ tab1, tab2, tab3, tab4 = st.tabs(
     ["🛍️ Kasir", "📦 Stok Barang", "📝 Laporan Keuangan", "🤖 AI Manager"]
 )
 
-# --- TAB 1: KASIR ---
+# --- TAB 1: KASIR (ANTI-CRASH STOK 0) ---
 with tab1:
     st.subheader("🛍️ Terminal Kasir")
     if "keranjang" not in st.session_state:
@@ -79,12 +77,10 @@ with tab1:
             c1, c2 = st.columns(2)
             stok_sekarang = int(data_p["stok_sekarang"])
 
-            # CEK APAKAH STOK TERSEDIA
             if stok_sekarang > 0:
                 qty = c1.number_input(
                     "Jumlah", min_value=1, max_value=stok_sekarang, step=1
                 )
-
                 if c2.button("➕ Tambah ke Pesanan", use_container_width=True):
                     item = {
                         "id": pilihan_id,
@@ -189,8 +185,7 @@ with tab2:
                     st.warning(f"ID {id_del} dihapus.")
                     st.rerun()
 
-
-# --- TAB 3: LAPORAN Keuangan
+# --- TAB 3: LAPORAN (FIX WITA & DELETE) ---
 with tab3:
     st.subheader("📊 Laporan Keuangan")
     from database_helper import ambil_laporan, hapus_satu_laporan, reset_laporan
@@ -198,23 +193,8 @@ with tab3:
     df_lap = ambil_laporan()
 
     if not df_lap.empty:
-        # PAKSA KONVERSI DI SINI:
-        # 1. Pastikan kolom tanggal jadi format waktu Python
-        df_lap["tanggal"] = pd.to_datetime(df_lap["tanggal"])
-
-        # 2. Tambahkan 8 jam (Makassar / WITA)
-        df_lap["tanggal"] = df_lap["tanggal"] + pd.Timedelta(hours=8)
-
-        # 3. Tampilkan di dataframe
-        st.dataframe(
-            df_lap,
-            column_config={
-                "tanggal": st.column_config.DatetimeColumn(
-                    "Waktu (WITA)", format="DD/MM/YY HH:mm"
-                ),
-            },
-            hide_index=True,
-        )
+        # Konversi ke WITA (UTC+8)
+        df_lap["tanggal"] = pd.to_datetime(df_lap["tanggal"]) + pd.Timedelta(hours=8)
 
         total_omzet = df_lap["total_harga"].sum()
         total_untung = df_lap["untung"].sum()
@@ -224,10 +204,9 @@ with tab3:
             "Untung Bersih", f"Rp {total_untung:,}".replace(",", "."), delta="Cuan!"
         )
 
+        st.write("### Detail Transaksi Terakhir")
         df_lap_tampil = df_lap.copy()
         df_lap_tampil.insert(0, "No", range(1, 1 + len(df_lap_tampil)))
-
-        st.write("### Detail Transaksi Terakhir")
         st.dataframe(
             df_lap_tampil,
             column_order=(
@@ -256,23 +235,22 @@ with tab3:
         col_h1, col_h2 = st.columns(2)
         with col_h1:
             st.write("🗑️ **Hapus Satu Transaksi**")
-            pilihan_label = []
-            map_id = {}
-            for i, row in df_lap.iterrows():
-                nomor_tabel = i + 1
-                label = f"{nomor_tabel}. {row['nama_barang']} ({row['tanggal'].strftime('%H:%M')})"
-                pilihan_label.append(label)
-                map_id[label] = row["id"]
+            pilihan_label = [
+                f"{i+1}. {r['nama_barang']} ({r['tanggal'].strftime('%H:%M')})"
+                for i, r in df_lap.iterrows()
+            ]
+            map_id = {
+                f"{i+1}. {r['nama_barang']} ({r['tanggal'].strftime('%H:%M')})": r["id"]
+                for i, r in df_lap.iterrows()
+            }
 
             pilihan_user = st.selectbox(
                 "Pilih Nomor untuk Dihapus", options=pilihan_label
             )
             if st.button("Hapus Transaksi Ini"):
-                id_asli = map_id[pilihan_user]
-                if hapus_satu_laporan(id_asli):
+                if hapus_satu_laporan(map_id[pilihan_user]):
                     st.success("Berhasil dihapus!")
                     st.rerun()
-
         with col_h2:
             st.write("⚠️ **Zona Bahaya**")
             if st.button("🔥 RESET SEMUA LAPORAN", type="primary"):
@@ -285,8 +263,7 @@ with tab3:
 # --- TAB 4: AI MANAGER ---
 with tab4:
     st.header("🤖 AI Business Manager")
-    st.write("Tanya AI tentang strategi stok atau keuntungan!")
-    user_ask = st.chat_input("Tanya sesuatu ke AI Manager...")
+    user_ask = st.chat_input("Tanya strategi bisnis...")
     if user_ask:
         with st.chat_message("user"):
             st.write(user_ask)
@@ -296,5 +273,4 @@ with tab4:
             with st.spinner("AI lagi mikir..."):
                 from database_helper import tanya_ai_manager
 
-                jawaban = tanya_ai_manager(user_ask, konteks_data)
-                st.write(jawaban)
+                st.write(tanya_ai_manager(user_ask, konteks_data))
